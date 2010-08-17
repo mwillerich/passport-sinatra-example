@@ -1,0 +1,9 @@
+services:
+  twitter:
+    key: "app_key"
+    secret: "app_secret"
+  facebook:
+    key: "app_key"
+    secret: "app_secret"
+    options:
+      scope: "email, offline_access, publish_stream"
