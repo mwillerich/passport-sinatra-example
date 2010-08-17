@@ -6,11 +6,67 @@ Get up and running with Oauth for every service on the planet immediately.
     git clone git@github.com:viatropos/passport-sinatra-example.git
     cd passport-sinatra-example
     
-Then fill out `tokens.yml` with you app key/secret for Facebook, and run:
+Then fill out `tokens.yml` with your app key/secret for Facebook, and run:
 
     ruby app.rb
     
-Go to [`http://localhost:4567/`](http://localhost:4567/), and login through Facebook to see your pic.  All the magic happens here:
+Go to [`http://localhost:4567/`](http://localhost:4567/), and through the power of Oauth you'll retrieve your Facebook profile.  All that with this:
+
+    require 'rubygems'
+    require 'haml'
+    require 'passport'
+    require 'sinatra'
+
+    enable :sessions
+
+    use Rack::Context
+    use Passport::Filter
+
+    Passport.configure("tokens.yml")
+
+    get "/" do
+      haml :index
+    end
+
+    post "/" do
+      Passport.authenticate do |token|
+        session[:facebook] = token.to_hash
+        redirect "/profile"
+      end
+    end
+
+    get "/profile" do
+      token   = FacebookToken.new(session[:facebook])
+      me      = JSON.parse(token.get("/me"))
+      @profile = {
+        :id     => me["id"],
+        :name   => me["name"],
+        :photo  => "https://graph.facebook.com/#{me["id"]}/picture",
+        :url    => me["link"]
+      }
+      haml :show
+    end
+
+    __END__
+    @@ layout
+    !!! 5
+    %head
+      %title Passport Sinatra
+    %body
+      = yield
+
+    @@ index
+    %form{:action => "/", :method => :post}
+      %input{:type => :hidden, :name => :oauth_provider, :value => :facebook}
+      %input{:type => :hidden, :name => :authentication_type, :value => :user}
+      %input{:type => :submit, :value => "Login with Facebook"}
+
+    @@ show
+    %a{:href => @profile[:url]}
+      %h1 Your on Facebook!
+      %img{:src => @profile[:photo]}
+
+The magic happens here:
 
     post "/" do
       Passport.authenticate do |token|
