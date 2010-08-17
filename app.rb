@@ -23,13 +23,7 @@ end
 
 get "/profile" do
   token   = FacebookToken.new(session[:facebook])
-  me      = JSON.parse(token.get("/me"))
-  @profile = {
-    :id     => me["id"],
-    :name   => me["name"],
-    :photo  => "https://graph.facebook.com/#{me["id"]}/picture",
-    :url    => me["link"]
-  }
+  @me      = JSON.parse(token.get("/me"))
   haml :show
 end
 
@@ -48,6 +42,6 @@ __END__
   %input{:type => :submit, :value => "Login with Facebook"}
   
 @@ show
-%a{:href => @profile[:url]}
-  %h1 Your on Facebook!
-  %img{:src => @profile[:photo]}
+%a{:href => @me["link"]}
+  %h1= "#{@me["name"]}, Your on Facebook!"
+  %img{:src => "https://graph.facebook.com/#{@me["id"]}/picture"}
